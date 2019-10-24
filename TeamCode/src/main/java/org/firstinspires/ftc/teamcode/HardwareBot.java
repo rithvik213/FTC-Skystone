@@ -11,14 +11,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 public class HardwareBot {
 
     Drive drive;
+    Camera camera;
 
     private final LinearOpMode opMode1;
 
     public HardwareBot(LinearOpMode mode) {
         this.opMode1 = mode;
         drive = new Drive(mode);
-
-
+        camera = new Camera(mode);
     }
 
 }
