@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.disnodeteam.dogecv.detectors.skystone.SkystoneDetector;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.opencv.core.Core;
@@ -13,113 +13,54 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-import java.util.Locale;
-import java.util.Timer;
-
-import static java.lang.String.*;
+import static org.opencv.core.CvType.CV_8U;
 import static org.opencv.core.CvType.CV_8UC1;
 
-public class Camera {
-    private final LinearOpMode opMode;
-
-    //DogeCV init stuff
-    OpenCvCamera phoneCam;
-    SkystoneDetector skyStoneDetector;
-
-    //EasyOpenCV init
-    int left_hue;
-    int right_hue;
-
-    int left_br;
-    int right_br;
-
-    int pattern;
+@Autonomous
+public class EasyOpenCVCameraTest extends LinearOpMode {
 
     OpenCvCamera phoneCamera;
+
     SamplePipeline stone_pipeline;
 
-    public Camera(LinearOpMode opMode) {
-        this.opMode = opMode;
-
-        int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
+    public void runOpMode() throws InterruptedException {
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         phoneCamera = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
         phoneCamera.openCameraDevice();
 
         stone_pipeline = new SamplePipeline();
         phoneCamera.setPipeline(stone_pipeline);
 
-        phoneCamera.startStreaming(320, 240, OpenCvCameraRotation.UPSIDE_DOWN);
-    }
+        phoneCamera.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_RIGHT);
 
-    public void DogeCV() {
-        OpenCvCamera phoneCam;
-        SkystoneDetector skyStoneDetector;
-        int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-        phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        phoneCam.openCameraDevice();
-        skyStoneDetector = new SkystoneDetector();
-        phoneCam.setPipeline(skyStoneDetector);
+        waitForStart();
 
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.UPSIDE_DOWN);
-        opMode.waitForStart();
-
-        while (opMode.opModeIsActive()) {
-            /*
-             * Send some stats to the telemetry
-             */
-            opMode.telemetry.addData("Stone Position X", skyStoneDetector.getScreenPosition().x);
-            opMode.telemetry.addData("Stone Position Y", skyStoneDetector.getScreenPosition().y);
-            opMode.telemetry.addData("Frame Count", phoneCam.getFrameCount());
-            opMode.telemetry.addData("FPS", format(Locale.US, "%.2f", phoneCam.getFps()));
-            opMode.telemetry.addData("Total frame time ms", phoneCam.getTotalFrameTimeMs());
-            opMode.telemetry.addData("Pipeline time ms", phoneCam.getPipelineTimeMs());
-            opMode.telemetry.addData("Overhead time ms", phoneCam.getOverheadTimeMs());
-            opMode.telemetry.addData("Theoretical max FPS", phoneCam.getCurrentPipelineMaxFps());
-            opMode.telemetry.update();
+        while (opModeIsActive()) {
+            telemetry.addData("LEFT RECT", stone_pipeline.left_hue + " " + stone_pipeline.left_br);
+            telemetry.addData("RIGHT RECT", stone_pipeline.right_hue + " " + stone_pipeline.right_br);
+            telemetry.addData("PATTERN", stone_pipeline.pattern);
+            telemetry.update();
         }
-    }
 
-    public double[] findSkyStone() {
-        initDogeCV();
-        boolean SkyStoneFound = skyStoneDetector.isDetected();
-        double[] x_y = {0,0};
-
-        while (!SkyStoneFound) {
-            SkyStoneFound = skyStoneDetector.isDetected();
-            opMode.telemetry.addData("X-Position: ", skyStoneDetector.getScreenPosition().x);
-            opMode.telemetry.addData("Y-Position: ", skyStoneDetector.getScreenPosition().y);
-            opMode.telemetry.addData("Skystone found: ", skyStoneDetector.isDetected());
-            opMode.telemetry.update();
-        }
-        x_y[0] = skyStoneDetector.getScreenPosition().x;
-        x_y[1] = skyStoneDetector.getScreenPosition().y;
-
-        opMode.telemetry.addData("X-Position: ", x_y[0]);
-        opMode.telemetry.addData("Y-Position: ", x_y[1]);
-        opMode.telemetry.addData("Skystone found: ", skyStoneDetector.isDetected());
-        opMode.telemetry.update();
-
-        return x_y;
-    }
-
-    public void initDogeCV() {
-        int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-        phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        phoneCam.openCameraDevice();
-        skyStoneDetector = new SkystoneDetector();
-        phoneCam.setPipeline(skyStoneDetector);
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
     }
 
     class SamplePipeline extends OpenCvPipeline {
+
+        int left_hue;
+        int right_hue;
+
+        int left_br;
+        int right_br;
+
+        int pattern;
 
         @Override
         public Mat processFrame(Mat input) {
             input.convertTo(input, CV_8UC1, 1, 10);
 
-            //telemetry.addData("Input Cols: ", input.cols());
-            //telemetry.addData("Input Rows: ", input.rows());
-            //telemetry.update();
+            telemetry.addData("Input Cols: ", input.cols());
+            telemetry.addData("Input Rows: ", input.rows());
+            telemetry.update();
 
             int[] left_rect = {
                     (int) (input.cols() * (11f / 32f)),
@@ -137,18 +78,18 @@ public class Camera {
 
             Imgproc.rectangle(
                     input,
-                    new org.opencv.core.Point(
+                    new Point(
                             left_rect[0],
                             left_rect[1]),
 
-                    new org.opencv.core.Point(
+                    new Point(
                             left_rect[2],
                             left_rect[3]),
                     new Scalar(0, 255, 0), 1);
 
             Imgproc.rectangle(
                     input,
-                    new org.opencv.core.Point(
+                    new Point(
                             right_rect[0],
                             right_rect[1]),
 
@@ -216,11 +157,6 @@ public class Camera {
         private int get_brightness(int red, int green, int blue) {
             return (int) (((double) (red + green + blue)) / 3);
         }
+        }
 
     }
-
-    public int getPattern() {
-        return pattern;
-    }
-
-}

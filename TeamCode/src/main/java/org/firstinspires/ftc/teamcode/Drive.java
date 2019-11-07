@@ -47,26 +47,26 @@ public class Drive {
         this.opMode = mode;
         leftFront = mode.hardwareMap.get(DcMotor.class, "lf");
         rightFront = mode.hardwareMap.get(DcMotor.class, "rf");
-        //rightFront.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack = mode.hardwareMap.get(DcMotor.class, "lb");
         rightBack = mode.hardwareMap.get(DcMotor.class, "rb");
-        //rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        sLeft = mode.hardwareMap.get(Servo.class, "sleft");
-        sRight = mode.hardwareMap.get(Servo.class, "sright");
+        //sLeft = mode.hardwareMap.get(Servo.class, "sleft");
+        //sRight = mode.hardwareMap.get(Servo.class, "sright");
     }
 
     public void moveDistance(int distance, double power, boolean direction) {
         resetEncoders();
         runUsingEncoders();
 
-        double target = rightBack.getCurrentPosition() + Math.round(Math.abs(distance) * COUNTS_PER_INCH);
+        double target = rightFront.getCurrentPosition() + Math.round(Math.abs(distance) * COUNTS_PER_INCH);
 
         if (direction) {
-            while (Math.abs(target - rightBack.getCurrentPosition()) > 45 && !opMode.isStopRequested()) {
+            while (Math.abs(target - Math.abs(rightFront.getCurrentPosition())) > 45 && !opMode.isStopRequested()) {
                 goStraight(power);
-                opMode.telemetry.addData("Current Position", rightBack.getCurrentPosition());
-                opMode.telemetry.addData("Distance to go", target - rightBack.getCurrentPosition());
+                opMode.telemetry.addData("Current Position", Math.abs(rightFront.getCurrentPosition()));
+                opMode.telemetry.addData("Distance to go", Math.abs(target - Math.abs(rightFront.getCurrentPosition())));
                 opMode.telemetry.update();
             }
         } else {
@@ -99,15 +99,15 @@ public class Drive {
         resetEncoders();
         runUsingEncoders();
 
-        double target = rightBack.getCurrentPosition() + Math.round(Math.abs(distance) * COUNTS_PER_INCH);
+        double target = leftFront.getCurrentPosition() + Math.round(Math.abs(distance) * COUNTS_PER_INCH);
 
-            while (Math.abs(target - rightBack.getCurrentPosition()) > 45 && !opMode.isStopRequested()) {
+            while (Math.abs(target - leftFront.getCurrentPosition()) > 45 && !opMode.isStopRequested()) {
                 leftFront.setPower(leftpower);
                 leftBack.setPower(leftpower);
                 rightFront.setPower(rightpower);
                 rightBack.setPower(rightpower);
-                opMode.telemetry.addData("Current Position", rightBack.getCurrentPosition());
-                opMode.telemetry.addData("Distance to go", target + rightBack.getCurrentPosition());
+                opMode.telemetry.addData("Current Position", leftFront.getCurrentPosition());
+                opMode.telemetry.addData("Distance to go", target + leftFront.getCurrentPosition());
                 opMode.telemetry.update();
             }
         setPowerSides(0.0);
@@ -123,22 +123,22 @@ public class Drive {
     public void goStraight(double power) {
         leftFront.setPower(power);
         leftBack.setPower(power);
-        rightFront.setPower(-power);
-        rightBack.setPower(-power);
+        rightFront.setPower(power);
+        rightBack.setPower(power);
     }
 
     public void resetEncoders() {
-        //leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public void runUsingEncoders() {
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void testMethods() {
@@ -190,7 +190,7 @@ public class Drive {
 
     }
 
-    public void turnIMU(double angle, double speed) {
+    public void turnIMU(double angle, double speed, boolean direction) {
         getIMUReady();
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
@@ -204,13 +204,21 @@ public class Drive {
             currentPos = Math.abs(angles.firstAngle);
 
             opMode.telemetry.addData("Current Position: ", currentPos);
+            opMode.telemetry.update();
             opMode.telemetry.addData("Distance to go: ", target - currentPos);
             opMode.telemetry.update();
 
-            leftFront.setPower(speed);
-            leftBack.setPower(speed);
-            rightFront.setPower(-speed);
-            rightBack.setPower(-speed);
+            if(direction) {
+                leftFront.setPower(speed+0.1);
+                //leftBack.setPower(speed);
+                rightFront.setPower(-speed);
+                //rightBack.setPower(-speed);
+            } else {
+                leftFront.setPower(-speed-0.1);
+                //leftBack.setPower(-speed);
+                rightFront.setPower(speed);
+                //rightBack.setPower(speed);
+            }
         }
         leftFront.setPower(0);
         leftBack.setPower(0);
