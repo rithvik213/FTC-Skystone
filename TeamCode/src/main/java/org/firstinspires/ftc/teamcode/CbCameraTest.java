@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -14,28 +13,23 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-import static org.opencv.core.CvType.CV_8U;
 import static org.opencv.core.CvType.CV_8UC1;
 
 @Autonomous
-public class EasyOpenCVCameraTest extends LinearOpMode {
+public class CbCameraTest extends LinearOpMode {
 
     OpenCvCamera phoneCamera;
 
     SamplePipeline stone_pipeline;
 
-    //EasyOpenCV init
-    int left_hue;
-    int right_hue;
-
-    int left_br;
-    int right_br;
-
-    int pattern;
-
-    ElapsedTime timer;
-
     String allianceColor = "blue";
+
+    int pattern = 0;
+
+    Scalar left_mean;
+    Scalar right_mean;
+
+
 
     public void runOpMode() throws InterruptedException {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -49,47 +43,27 @@ public class EasyOpenCVCameraTest extends LinearOpMode {
 
         waitForStart();
 
-        timer = new ElapsedTime();
+        while(opModeIsActive()) {
 
-        timer.reset();
-
-        while (timer.seconds() <= 3 && opModeIsActive()) {
-            telemetry.addData("Pattern: ",pattern);
-            //pattern = robot.camera.getPattern();
-            telemetry.addData("Timer: ", timer.seconds());
+            telemetry.addData("Pattern: ", pattern);
+            telemetry.addData("Left_mean", getLeftMean().val[0]);
+            telemetry.addData("Right_mean", getRight_mean().val[0]);
             telemetry.update();
         }
-
-        allianceColor = "red";
-
-        while (timer.seconds() <= 3 && opModeIsActive()) {
-            telemetry.addData("Pattern: ",pattern);
-            //pattern = robot.camera.getPattern();
-            telemetry.addData("Timer: ", timer.seconds());
-            telemetry.update();
-        }
-
-
-
-
-
-
-        /*while (opModeIsActive()) {
-            telemetry.addData("LEFT RECT", stone_pipelineleft + " " + stone_pipeline.left_br);
-            telemetry.addData("RIGHT RECT", stone_pipeline.right_hue + " " + stone_pipeline.right_br);
-            telemetry.addData("PATTERN", stone_pipeline.pattern);
-            telemetry.update();
-        }*/
-
-
 
     }
 
     class SamplePipeline extends OpenCvPipeline {
+        Mat yCbCrChan2Mat = new Mat();
+        Mat thresholdMat = new Mat();
+
 
         @Override
         public Mat processFrame(Mat input) {
-            input.convertTo(input, CV_8UC1, 1, 10);
+            //input.convertTo(input, CV_8UC1, 1, 10);
+            Imgproc.cvtColor(input, yCbCrChan2Mat, Imgproc.COLOR_RGB2YCrCb);
+            Core.extractChannel(yCbCrChan2Mat, yCbCrChan2Mat, 2);
+
             int[] left_rect;
             int[] right_rect;
 
@@ -179,23 +153,19 @@ public class EasyOpenCVCameraTest extends LinearOpMode {
             Mat left_block = input.submat(left_rect[1], left_rect[3], left_rect[0], left_rect[2]);
             Mat right_block = input.submat(right_rect[1], right_rect[3], right_rect[0], right_rect[2]);
 
+            left_mean = Core.mean(left_block);
 
-            Scalar left_mean = Core.mean(left_block);
 
+            right_mean = Core.mean(right_block);
 
-            Scalar right_mean = Core.mean(right_block);
+            if(allianceColor.equalsIgnoreCase("red")) {
 
-            left_hue = get_hue((int) left_mean.val[0], (int) left_mean.val[1], (int) left_mean.val[2]);
-            right_hue = get_hue((int) right_mean.val[0], (int) right_mean.val[1], (int) right_mean.val[2]);
-            left_br = get_brightness((int) left_mean.val[0], (int) left_mean.val[1], (int) left_mean.val[2]);
-            right_br = get_brightness((int) right_mean.val[0], (int) right_mean.val[1], (int) right_mean.val[2]);
+                if(Math.abs(left_mean.val[0] - right_mean.val[0]) <= 25) pattern = 3;
+                else if(left_mean.val[0] < right_mean.val[0]) pattern = 1;
+                else if(left_mean.val[0] > right_mean.val[0]) pattern = 2;
 
-            if (allianceColor.equalsIgnoreCase("red")) {
-
-                if (left_br > 95 && right_br > 95) pattern = 1;
-                else if (left_br > 95 && right_br < 95) pattern = 3;
-                else if (left_br < 95 && right_br > 95) pattern = 2;
-                else if (left_br < 95 && right_br < 95) {
+                //else if (Math.abs((left_mean.val[0] - right_mean.val[0])) <= 10) pattern = 3;
+                /*else if (left_br < 90 && right_br < 90) {
                     if (left_br > right_br) {
                         pattern = 1;
                     } else if (left_br < right_br) {
@@ -203,54 +173,38 @@ public class EasyOpenCVCameraTest extends LinearOpMode {
                     } else {
                         pattern = 3;
                     }
-                }
-            } else {
-                if (left_br > 95 && right_br > 95) pattern = 1;
-                else if (left_br > 95 && right_br < 95) pattern = 2;
-                else if (left_br < 95 && right_br > 95) pattern = 3;
-                else if (left_br < 95 && right_br < 95) {
-                    if (left_br > right_br) {
-                        pattern = 1;
-                    } else if (left_br < right_br) {
-                        pattern = 2;
-                    } else {
-                        pattern = 3;
-                    }
-                }
+                }*/
             }
 
+            else {
+
+                if(Math.abs(left_mean.val[0] - right_mean.val[0]) <= 25) pattern = 3;
+                else if(left_mean.val[0] < right_mean.val[0]) pattern = 2;
+                else if(left_mean.val[0] > right_mean.val[0]) pattern = 1;
+
+                //if (left_mean.val[0] > right_mean.val[0]) pattern = 1;
+                //else if (left_mean.val[0] < right_mean.val[0]) pattern = 2;
+                //else if(Math.abs(left_mean.val[0] - right_mean.val[0]) <= 25) pattern = 3;
+                //else if (Math.abs((left_mean.val[0] - right_mean.val[0])) <= 10) pattern = 3;
+                /*else if (left_br < 85 && right_br < 85) {
+                    if (left_br > right_br) {
+                        pattern = 1;
+                    } else if (left_br < right_br) {
+                        pattern = 2;
+                    } else {
+                        pattern = 3;
+                    }
+                }*/
+            }
             return input;
         }
 
-        private int get_hue(int red, int green, int blue) {
-
-            float min = Math.min(Math.min(red, green), blue);
-            float max = Math.max(Math.max(red, green), blue);
-
-            if (min == max) {
-                return 0;
-            }
-
-            float hue = 0f;
-            if (max == red) {
-                hue = (green - blue) / (max - min);
-
-            } else if (max == green) {
-                hue = 2f + (blue - red) / (max - min);
-
-            } else {
-                hue = 4f + (red - green) / (max - min);
-            }
-
-            hue = hue * 60;
-            if (hue < 0) hue = hue + 360;
-
-            return Math.round(hue);
-        }
-
-        private int get_brightness(int red, int green, int blue) {
-            return (int) (((double) (red + green + blue)) / 3);
-        }
+    }
+    public Scalar getLeftMean() {
+        return left_mean;
     }
 
+    public Scalar getRight_mean() {
+        return right_mean;
     }
+}

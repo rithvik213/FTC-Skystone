@@ -22,8 +22,8 @@ public class Drive {
 
     DcMotor leftFront = null;
     DcMotor rightFront = null;
-    DcMotor leftBack;
-    DcMotor rightBack;
+    DcMotor leftBack = null;
+    DcMotor rightBack = null;
 
     Servo sLeft = null;
     Servo sRight = null;
@@ -40,60 +40,77 @@ public class Drive {
 
     double WHEEL_DIAMETER_INCHES = 4.0;
     double COUNTS_PER_MOTOR_REV = 1120;
-    double GEAR_REDUCTION = 1.0;
+    double GEAR_REDUCTION = 1.5; //should be 1.5
     double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
 
     public Drive(LinearOpMode mode) {
         this.opMode = mode;
-        leftFront = mode.hardwareMap.get(DcMotor.class, "lf");
-        rightFront = mode.hardwareMap.get(DcMotor.class, "rf");
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack = mode.hardwareMap.get(DcMotor.class, "lb");
-        rightBack = mode.hardwareMap.get(DcMotor.class, "rb");
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront = opMode.hardwareMap.get(DcMotor.class, "lf");
+        rightFront = opMode.hardwareMap.get(DcMotor.class, "rf");
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack = opMode.hardwareMap.get(DcMotor.class, "lb");
+        rightBack = opMode.hardwareMap.get(DcMotor.class, "rb");
+        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        getIMUReady();
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //resetEncoders();
+        //runUsingEncoders();
 
         //sLeft = mode.hardwareMap.get(Servo.class, "sleft");
         //sRight = mode.hardwareMap.get(Servo.class, "sright");
     }
 
-    public void moveDistance(int distance, double power, boolean direction) {
-        resetEncoders();
-        runUsingEncoders();
+    public void moveDistance(double distance, double power, boolean direction) {
+        //resetEncoders();
+        //runUsingEncoders();
 
-        double target = rightFront.getCurrentPosition() + Math.round(Math.abs(distance) * COUNTS_PER_INCH);
+        double target;
+        double counts;
+
+        counts = ((distance / (GEAR_REDUCTION * WHEEL_DIAMETER_INCHES * 3.1415))) * COUNTS_PER_MOTOR_REV;
+        target = Math.abs(rightFront.getCurrentPosition()) +  counts;
+        //target = rightFront.getCurrentPosition() + Math.round(Math.abs(distance) * COUNTS_PER_INCH);
 
         if (direction) {
-            while (Math.abs(target - Math.abs(rightFront.getCurrentPosition())) > 45 && !opMode.isStopRequested()) {
+            while (Math.abs(Math.abs(rightFront.getCurrentPosition()) - Math.abs(target)) > 45 && !opMode.isStopRequested()) {
                 goStraight(power);
                 opMode.telemetry.addData("Current Position", Math.abs(rightFront.getCurrentPosition()));
-                opMode.telemetry.addData("Distance to go", Math.abs(target - Math.abs(rightFront.getCurrentPosition())));
+                opMode.telemetry.addData("Distance to go", Math.abs(Math.abs(rightFront.getCurrentPosition()) - Math.abs(target)));
                 opMode.telemetry.update();
             }
+            goStraight(0);
         } else {
-            boolean rotation = true;
-            while (Math.abs(target + rightBack.getCurrentPosition()) > 45 && !opMode.isStopRequested()) {
-                if (rotation) {
-                    leftFront.setPower(-power);
-                    leftBack.setPower(-power);
-                    rightFront.setPower(power*5);
-                    rightBack.setPower(power*5);
-                    //rotation = false;
-                } else {
-                    //leftFront.setPower(-0.2);
-                    //leftBack.setPower(-0.2);
-                    rightFront.setPower(0.2);
-                    rightBack.setPower(0.2);
-                    rotation = true;
+            target = Math.abs(rightFront.getCurrentPosition()) - counts;
+                //target = -1 * (-rightFront.getCurrentPosition() - Math.round(Math.abs(distance) * COUNTS_PER_INCH));
 
+                while ((Math.abs(rightFront.getCurrentPosition()) - target) > 45 && !opMode.isStopRequested()) {
+                    goStraight(-power);
+                    opMode.telemetry.addData("Target: ",Math.abs(rightFront.getCurrentPosition()) - counts );
+                    opMode.telemetry.addData("Current Position", Math.abs(rightFront.getCurrentPosition()));
+                    opMode.telemetry.addData("Distance to go",(Math.abs(rightFront.getCurrentPosition()) - target));
+                    opMode.telemetry.update();
                 }
-
-                opMode.telemetry.addData("Current Position", rightBack.getCurrentPosition());
-                opMode.telemetry.addData("Distance to go", Math.abs(-rightBack.getCurrentPosition() - target));
-                opMode.telemetry.update();
+              goStraight(0);
             }
+            /*else {
+                target = rightFront.getCurrentPosition() - Math.round(Math.abs(distance) * COUNTS_PER_INCH);
+
+                while ((-rightFront.getCurrentPosition() + target) > 45 && !opMode.isStopRequested()) {
+                    leftFront.setPower(power);
+                    leftBack.setPower(power);
+                    rightFront.setPower(power);
+                    rightBack.setPower(power);
+
+                    opMode.telemetry.addData("Target: ",-1 * (-rightFront.getCurrentPosition() - Math.round(Math.abs(distance) * COUNTS_PER_INCH)) );
+                    opMode.telemetry.addData("Current Position", (rightFront.getCurrentPosition()));
+                    opMode.telemetry.addData("Distance to go",(target - rightFront.getCurrentPosition()));
+                    opMode.telemetry.update();
+                }
+            }*/
+           goStraight(0);
         }
-        setPowerSides(0.0);
-    }
 
     public void moveDistance2(int distance, double leftpower, double rightpower, boolean direction) {
         resetEncoders();
@@ -113,6 +130,11 @@ public class Drive {
         setPowerSides(0.0);
     }
 
+    public void moveDistanceRUNTOPOS(int distance, double power, boolean direction) {
+        double target = rightFront.getCurrentPosition() + Math.round(Math.abs(distance) * COUNTS_PER_INCH);
+
+    }
+
     public void setPowerSides(double power) {
         leftFront.setPower(power);
         rightFront.setPower(power);
@@ -121,17 +143,17 @@ public class Drive {
     }
 
     public void goStraight(double power) {
-        leftFront.setPower(power);
-        leftBack.setPower(power);
-        rightFront.setPower(power);
-        rightBack.setPower(power);
+        leftFront.setPower(-power);
+        leftBack.setPower(-power);
+        rightFront.setPower(-power);
+        rightBack.setPower(-power);
     }
 
     public void resetEncoders() {
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public void runUsingEncoders() {
@@ -140,6 +162,11 @@ public class Drive {
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
+    public void runWithoutEncoders() {
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
 
     public void testMethods() {
         leftBack.setPower(-0.2);
@@ -191,33 +218,218 @@ public class Drive {
     }
 
     public void turnIMU(double angle, double speed, boolean direction) {
-        getIMUReady();
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        double startTime = opMode.getRuntime();
+        double deltaAngle = 0, initTime, deltaTime;
+        double i = 0;
 
         double initialPos = angles.firstAngle;
         double currentPos = initialPos;
+        double target = 0;
 
-        double target = angle + initialPos;
+        if (direction) {
+            target = angle - initialPos;
+        }
+        else {
+            target = angle + initialPos;
+        }
 
-        while(opMode.opModeIsActive() && ((Math.abs(target - currentPos)) > 3)) {
+        while(opMode.opModeIsActive() && ((Math.abs(target - Math.abs(currentPos))) > 1)) {
+            initTime = opMode.getRuntime();
             angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             currentPos = Math.abs(angles.firstAngle);
 
+            double power = Range.clip((Math.abs((currentPos - target) / (100.0)) + i), .3, .7);
+
             opMode.telemetry.addData("Current Position: ", currentPos);
             opMode.telemetry.update();
-            opMode.telemetry.addData("Distance to go: ", target - currentPos);
+            opMode.telemetry.addData("Distance to go: ", (Math.abs(target - Math.abs(currentPos))));
             opMode.telemetry.update();
 
             if(direction) {
-                leftFront.setPower(speed+0.1);
-                //leftBack.setPower(speed);
-                rightFront.setPower(-speed);
-                //rightBack.setPower(-speed);
+                leftFront.setPower(-power);
+                leftBack.setPower(-power);
+                rightFront.setPower(power);
+                rightBack.setPower(power);
             } else {
-                leftFront.setPower(-speed-0.1);
-                //leftBack.setPower(-speed);
-                rightFront.setPower(speed);
-                //rightBack.setPower(speed);
+                leftFront.setPower(power);
+                leftBack.setPower(power);
+                rightFront.setPower(-power);
+                rightBack.setPower(-power);
+            }
+
+            deltaTime = opMode.getRuntime() - initTime;
+
+            if (Math.abs(currentPos - target) < 30)
+                i += .01 * Math.abs(currentPos - target) * deltaTime;
+
+            if (i > 0.3) {
+                i = 0.3;
+            }
+        }
+        leftFront.setPower(0);
+        leftBack.setPower(0);
+        rightFront.setPower(0);
+        rightBack.setPower(0);
+    }
+
+    public void turnIMUThreeWheel(double angle, double speed, boolean direction) {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        double startTime = opMode.getRuntime();
+        double deltaAngle = 0, initTime, deltaTime;
+        double i = 0;
+
+        double initialPos = angles.firstAngle;
+        double currentPos = initialPos;
+        double target = 0;
+
+        if (direction) {
+            target = angle - initialPos;
+        }
+        else {
+            target = angle + initialPos;
+        }
+
+        while(opMode.opModeIsActive() && ((Math.abs(target - Math.abs(currentPos))) > 1)) {
+            initTime = opMode.getRuntime();
+            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            currentPos = Math.abs(angles.firstAngle);
+
+            double power = Range.clip((Math.abs((currentPos - target) / (100.0)) + i), .3, .7);
+
+            opMode.telemetry.addData("Current Position: ", currentPos);
+            opMode.telemetry.update();
+            opMode.telemetry.addData("Distance to go: ", (Math.abs(target - Math.abs(currentPos))));
+            opMode.telemetry.update();
+
+            if(direction) {
+                leftFront.setPower(-power);
+                //leftBack.setPower(-power);
+                rightFront.setPower(power);
+                rightBack.setPower(power);
+            } else {
+                leftFront.setPower(power);
+                leftBack.setPower(power);
+                rightFront.setPower(-power);
+                rightBack.setPower(-power);
+            }
+
+            deltaTime = opMode.getRuntime() - initTime;
+
+            if (Math.abs(currentPos - target) < 30)
+                i += .01 * Math.abs(currentPos - target) * deltaTime;
+
+            if (i > 0.3) {
+                i = 0.3;
+            }
+        }
+        leftFront.setPower(0);
+        //leftBack.setPower(0);
+        rightFront.setPower(0);
+        rightBack.setPower(0);
+    }
+
+    public void turnIMUOneSide(double angle, double speed, boolean direction) {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        double startTime = opMode.getRuntime();
+        double deltaAngle = 0, initTime, deltaTime;
+        double i = 0;
+
+        double initialPos = angles.firstAngle;
+        double currentPos = initialPos;
+        double target = 0;
+
+        if (direction) {
+            target = Math.abs(angle - Math.abs(initialPos));
+        }
+        else {
+            target = Math.abs(angle + initialPos);
+        }
+
+        opMode.telemetry.addData("Angle when target calculated: " ,Math.abs(initialPos));
+        opMode.telemetry.addData("Target angle: ", target);
+        opMode.telemetry.update();
+
+        while(opMode.opModeIsActive() && ((Math.abs(target - Math.abs(currentPos))) > 2)) {
+            initTime = opMode.getRuntime();
+            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            currentPos = Math.abs(angles.firstAngle);
+
+            double power = Range.clip((Math.abs((currentPos - target) / (100.0)) + i), .3, .7);
+
+            opMode.telemetry.addData("Current Position: ", Math.abs(currentPos));
+            opMode.telemetry.addData("Distance to go: ", (Math.abs(target - Math.abs(currentPos))));
+            opMode.telemetry.update();
+
+            if(direction) {
+                leftFront.setPower(-power);
+                leftBack.setPower(-power);
+                //rightFront.setPower(power);
+                //rightBack.setPower(power);
+            } else {
+                //leftFront.setPower(power);
+                //leftBack.setPower(power);
+                rightFront.setPower(-power);
+                rightBack.setPower(-power);
+            }
+
+            deltaTime = opMode.getRuntime() - initTime;
+
+            if (((Math.abs(target - Math.abs(currentPos)) < 20)))
+                i += .01 * Math.abs(currentPos - target) * deltaTime;
+
+            if (i > 0.3) {
+                i = 0.3;
+            }
+        }
+        leftFront.setPower(0);
+        leftBack.setPower(0);
+        rightFront.setPower(0);
+        rightBack.setPower(0);
+    }
+
+    public void Auto2ndTurnRed(double angle, double speed) {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        double startTime = opMode.getRuntime();
+        double deltaAngle = 0, initTime, deltaTime;
+        double i = 0;
+
+        double initialPos = angles.firstAngle;
+        double currentPos = initialPos;
+        double target = 0;
+
+            //target = Math.abs(angle - Math.abs(initialPos));
+            target = Math.abs(angle + initialPos);
+
+        opMode.telemetry.addData("Angle when target calculated: " ,Math.abs(initialPos));
+        opMode.telemetry.addData("Target angle: ", target);
+        opMode.telemetry.update();
+
+        while(opMode.opModeIsActive() && ((Math.abs(target - Math.abs(currentPos))) > 2)) {
+            initTime = opMode.getRuntime();
+            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            currentPos = Math.abs(angles.firstAngle);
+
+            double power = Range.clip((Math.abs((currentPos - target) / (100.0)) + i), .3, .7);
+
+            opMode.telemetry.addData("Current Position: ", Math.abs(currentPos));
+            opMode.telemetry.addData("Distance to go: ", (Math.abs(target - Math.abs(currentPos))));
+            opMode.telemetry.update();
+
+            rightFront.setPower(power);
+            rightBack.setPower(power);
+
+            deltaTime = opMode.getRuntime() - initTime;
+
+            if (((Math.abs(target - Math.abs(currentPos)) < 20)))
+                i += .01 * Math.abs(currentPos - target) * deltaTime;
+
+            if (i > 0.3) {
+                i = 0.3;
             }
         }
         leftFront.setPower(0);

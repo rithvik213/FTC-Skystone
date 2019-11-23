@@ -12,6 +12,7 @@ public class HardwareBot {
 
     Drive drive;
     Camera camera;
+    Accessories accessories;
 
     private final LinearOpMode opMode1;
 
@@ -19,6 +20,7 @@ public class HardwareBot {
         this.opMode1 = mode;
         drive = new Drive(mode);
         camera = new Camera(mode);
+        accessories = new Accessories(mode);
     }
 
 }
