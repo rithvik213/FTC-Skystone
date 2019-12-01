@@ -26,6 +26,7 @@ public class RedNear extends LinearOpMode {
 
         switch (pattern) {
             case 1:
+                //test
                 robot.accessories.readyToGrabOrUnlatch();
                 robot.drive.turnIMUOneSide(10,0.3,false);
                 robot.drive.moveDistance(22,0.4,true);
