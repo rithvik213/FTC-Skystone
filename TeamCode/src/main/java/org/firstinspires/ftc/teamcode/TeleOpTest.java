@@ -97,14 +97,14 @@ public class TeleOpTest extends LinearOpMode {
             double down = -gamepad1.right_stick_y;
             */
 
-            up = gamepad1.left_trigger;
-            down = gamepad1.right_trigger;
+            up = gamepad1.left_trigger + gamepad2.left_trigger;
+            down = gamepad1.right_trigger + gamepad2.right_trigger;
 
-            if(up > 0.1) {
-                slides.setPower(up);
+            if(gamepad1.right_trigger > 0.1 || gamepad2.right_trigger > 0.1) {
+                slides.setPower(0.2);
             }
-            else if(down > 0.1) {
-                slides.setPower(-down);
+            else if(gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1) {
+                slides.setPower(-0.2);
             }
             else {
                 slides.setPower(0);
@@ -124,19 +124,23 @@ public class TeleOpTest extends LinearOpMode {
                 slides.setPower(0);
             }*/
 
-            if(gamepad1.dpad_up) {
+            if(gamepad1.dpad_up || gamepad2.dpad_up) {
                 clutch.setPosition(0.2);
 
             }
-            else if(gamepad1.dpad_down) {
+            else if(gamepad1.dpad_down || gamepad2.dpad_down) {
                 clutch.setPosition(0.7);
             }
 
             if(gamepad1.a || gamepad2.a) {
                 autoClutch.setPosition(1);
             }
+
+            if(gamepad1.x || gamepad2.x) {
+                autoClutch.setPosition(0.4);
+            }
             telemetry.addData("Slides Encoder counts:", slides.getCurrentPosition());
-            handleGamePad();
+            //handleGamePad();
             telemetry.update();
 
 

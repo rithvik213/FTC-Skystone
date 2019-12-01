@@ -18,7 +18,7 @@ public class Accessories {
 
         //Prev auto clutch
        //autoClutch.setPosition(0.8);
-        autoClutch.setPosition(1);
+       // autoClutch.setPosition(1);
     }
 
     public void readyToGrabOrUnlatch() {

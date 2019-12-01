@@ -391,6 +391,66 @@ public class Drive {
         rightBack.setPower(0);
     }
 
+    public void turnIMUOneSideBlue(double angle, double speed, boolean direction) {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        double startTime = opMode.getRuntime();
+        double deltaAngle = 0, initTime, deltaTime;
+        double i = 0;
+
+        double initialPos = angles.firstAngle;
+        double currentPos = initialPos;
+        double target = 0;
+
+        if (direction) {
+            target = Math.abs(angle + initialPos);
+        }
+        else {
+            target = Math.abs(angle - Math.abs(initialPos));
+        }
+
+        opMode.telemetry.addData("Angle when target calculated: " ,Math.abs(initialPos));
+        opMode.telemetry.addData("Target angle: ", target);
+        opMode.telemetry.update();
+
+        while(opMode.opModeIsActive() && ((Math.abs(target - Math.abs(currentPos))) > 2)) {
+            initTime = opMode.getRuntime();
+            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            currentPos = Math.abs(angles.firstAngle);
+
+            double power = Range.clip((Math.abs((currentPos - target) / (100.0)) + i), .3, .7);
+
+            opMode.telemetry.addData("Current Position: ", Math.abs(currentPos));
+            opMode.telemetry.addData("Distance to go: ", (Math.abs(target - Math.abs(currentPos))));
+            opMode.telemetry.update();
+
+            if(direction) {
+                leftFront.setPower(-power);
+                leftBack.setPower(-power);
+                rightFront.setPower(power);
+                rightBack.setPower(power);
+            } else {
+                leftFront.setPower(power);
+                leftBack.setPower(power);
+                rightFront.setPower(-power);
+                rightBack.setPower(-power);
+            }
+
+            deltaTime = opMode.getRuntime() - initTime;
+
+            if (((Math.abs(target - Math.abs(currentPos)) < 20)))
+                i += .01 * Math.abs(currentPos - target) * deltaTime;
+
+            if (i > 0.3) {
+                i = 0.3;
+            }
+        }
+        leftFront.setPower(0);
+        leftBack.setPower(0);
+        rightFront.setPower(0);
+        rightBack.setPower(0);
+    }
+
     public void Auto2ndTurnRed(double angle, double speed) {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
