@@ -29,6 +29,8 @@ public class Point {
         }
     }
 
+    // I am a n idiot
+
     public Point clone() {
         return new Point(x, y);
     }
