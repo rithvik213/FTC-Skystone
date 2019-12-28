@@ -1,11 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import java.util.Arrays;
-
+@TeleOp
 public class MecanumPooja extends LinearOpMode {
     DcMotor leftFront = null;
     DcMotor rightFront = null;
