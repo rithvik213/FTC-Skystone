@@ -25,10 +25,21 @@ public class MecanumDrive  {
     }
 
     public void TeleOpDriveMode() {
-        double leftFrontVal =  opMode.gamepad1.left_stick_y - (opMode.gamepad1.left_stick_x)  + - opMode.gamepad1.right_stick_x;
+
+        double x = opMode.gamepad1.left_stick_x;
+        double y = -opMode.gamepad1.left_stick_y;
+        double turn = opMode.gamepad1.right_stick_x;
+
+        double leftFrontVal = y + turn + x;
+        double leftBackVal = y + turn - x;
+        double rightFrontVal = y - turn - x;
+        double rightBackVal = y - turn + x;
+
+        /*double leftFrontVal =  opMode.gamepad1.left_stick_y - (opMode.gamepad1.left_stick_x)  + - opMode.gamepad1.right_stick_x;
         double rightFrontVal =  opMode.gamepad1.left_stick_y  + (opMode.gamepad1.left_stick_x) - -opMode.gamepad1.right_stick_x;
         double leftBackVal = opMode.gamepad1.left_stick_y  + (opMode.gamepad1.left_stick_x)  + -opMode.gamepad1.right_stick_x;
         double rightBackVal = opMode.gamepad1.left_stick_y - (opMode.gamepad1.left_stick_x) - -opMode.gamepad1.right_stick_x;
+        */
 
         //Move range to between 0 and +1, if not already
         double[] wheelPowers = {rightFrontVal, leftFrontVal, leftBackVal, rightBackVal};
@@ -39,6 +50,7 @@ public class MecanumDrive  {
             leftBackVal /= wheelPowers[3];
             rightBackVal /= wheelPowers[3];
         }
+
         leftFront.setPower(leftFrontVal);
         rightFront.setPower(rightFrontVal);
         leftBack.setPower(leftBackVal);
