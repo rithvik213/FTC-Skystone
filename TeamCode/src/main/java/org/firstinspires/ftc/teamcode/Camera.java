@@ -9,6 +9,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
@@ -47,7 +48,7 @@ public class Camera {
         this.opMode = opMode;
 
         int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-        phoneCamera = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
+        phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
         phoneCamera.openCameraDevice();
 
         stone_pipeline = new SamplePipeline();
@@ -60,12 +61,12 @@ public class Camera {
         OpenCvCamera phoneCam;
         SkystoneDetector skyStoneDetector;
         int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-        phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        phoneCam.openCameraDevice();
+        //phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
+        //phoneCam.openCameraDevice();
         skyStoneDetector = new SkystoneDetector();
-        phoneCam.setPipeline(skyStoneDetector);
+        //phoneCam.setPipeline(skyStoneDetector);
 
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+        //phoneCam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
         opMode.waitForStart();
 
         while (opMode.opModeIsActive()) {
@@ -74,12 +75,12 @@ public class Camera {
              */
             opMode.telemetry.addData("Stone Position X", skyStoneDetector.getScreenPosition().x);
             opMode.telemetry.addData("Stone Position Y", skyStoneDetector.getScreenPosition().y);
-            opMode.telemetry.addData("Frame Count", phoneCam.getFrameCount());
-            opMode.telemetry.addData("FPS", format(Locale.US, "%.2f", phoneCam.getFps()));
-            opMode.telemetry.addData("Total frame time ms", phoneCam.getTotalFrameTimeMs());
-            opMode.telemetry.addData("Pipeline time ms", phoneCam.getPipelineTimeMs());
-            opMode.telemetry.addData("Overhead time ms", phoneCam.getOverheadTimeMs());
-            opMode.telemetry.addData("Theoretical max FPS", phoneCam.getCurrentPipelineMaxFps());
+          //  opMode.telemetry.addData("Frame Count", phoneCam.getFrameCount());
+          //  opMode.telemetry.addData("FPS", format(Locale.US, "%.2f", phoneCam.getFps()));
+         //   opMode.telemetry.addData("Total frame time ms", phoneCam.getTotalFrameTimeMs());
+         //   opMode.telemetry.addData("Pipeline time ms", phoneCam.getPipelineTimeMs());
+         //   opMode.telemetry.addData("Overhead time ms", phoneCam.getOverheadTimeMs());
+         //   opMode.telemetry.addData("Theoretical max FPS", phoneCam.getCurrentPipelineMaxFps());
             opMode.telemetry.update();
         }
     }
@@ -109,11 +110,11 @@ public class Camera {
 
     public void initDogeCV() {
         int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-        phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        phoneCam.openCameraDevice();
+       // phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
+       // phoneCam.openCameraDevice();
         skyStoneDetector = new SkystoneDetector();
-        phoneCam.setPipeline(skyStoneDetector);
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+       // phoneCam.setPipeline(skyStoneDetector);
+       // phoneCam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
     }
 
     public void setAllianceColor(String alliance) {
