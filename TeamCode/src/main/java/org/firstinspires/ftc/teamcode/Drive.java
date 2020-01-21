@@ -45,21 +45,42 @@ public class Drive {
 
     public Drive(LinearOpMode mode) {
         this.opMode = mode;
-        leftFront = opMode.hardwareMap.get(DcMotor.class, "lf");
-        rightFront = opMode.hardwareMap.get(DcMotor.class, "rf");
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack = opMode.hardwareMap.get(DcMotor.class, "lb");
-        rightBack = opMode.hardwareMap.get(DcMotor.class, "rb");
-        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        getIMUReady();
-        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        leftFront = opMode.hardwareMap.get(DcMotor.class, "lf");
+//        rightFront = opMode.hardwareMap.get(DcMotor.class, "rf");
+//        rightFront.setDirection(DcMotor.Direction.REVERSE);
+//        leftBack = opMode.hardwareMap.get(DcMotor.class, "lb");
+//        rightBack = opMode.hardwareMap.get(DcMotor.class, "rb");
+//        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+//
+//        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        getIMUReady();
+//        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //resetEncoders();
         //runUsingEncoders();
 
         //sLeft = mode.hardwareMap.get(Servo.class, "sleft");
         //sRight = mode.hardwareMap.get(Servo.class, "sright");
+
+        leftFront = opMode.hardwareMap.get(DcMotor.class, "lf");
+        rightFront = opMode.hardwareMap.get(DcMotor.class, "rf");
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack = opMode.hardwareMap.get(DcMotor.class, "lb");
+        rightBack = opMode.hardwareMap.get(DcMotor.class, "rb");
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        getIMUReady();
+        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
     public void moveDistance(double distance, double power, boolean direction) {
@@ -78,6 +99,7 @@ public class Drive {
                 goStraight(power);
                 opMode.telemetry.addData("Current Position", Math.abs(rightFront.getCurrentPosition()));
                 opMode.telemetry.addData("Distance to go", Math.abs(Math.abs(rightFront.getCurrentPosition()) - Math.abs(target)));
+                opMode.telemetry.addData("Left front encoder: ", leftFront.getCurrentPosition());
                 opMode.telemetry.update();
             }
             goStraight(0);

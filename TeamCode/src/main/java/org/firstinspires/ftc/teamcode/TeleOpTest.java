@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SampleRevBlinkinLedDriver;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
 import java.util.concurrent.TimeUnit;
@@ -59,10 +56,13 @@ public class TeleOpTest extends LinearOpMode {
 
         leftFront = hardwareMap.get(DcMotor.class, "lf");
         rightFront = hardwareMap.get(DcMotor.class, "rf");
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack = hardwareMap.get(DcMotor.class, "lb");
         rightBack = hardwareMap.get(DcMotor.class, "rb");
-        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
         slides = hardwareMap.dcMotor.get("slides");
         slides.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -82,8 +82,8 @@ public class TeleOpTest extends LinearOpMode {
             turn = gamepad1.right_stick_x;
 
 
-            left = drive - turn;
-            right = drive + turn;
+            left = drive - turn; //before drive - turn
+            right = drive + turn; // before drive + turn
 
 
             max = Math.max(Math.abs(left), Math.abs(right));
@@ -110,10 +110,10 @@ public class TeleOpTest extends LinearOpMode {
                 slides.setPower(0);
             }
 
-            leftFront.setPower(left);
-            leftBack.setPower(left);
-            rightFront.setPower(right);
-            rightBack.setPower(right);
+            leftFront.setPower(-left);
+            leftBack.setPower(-left);
+            rightFront.setPower(-right);
+            rightBack.setPower(-right);
 
             /*if(gamepad2.right_bumper) {
                 slides.setPower(0.3);
@@ -154,9 +154,9 @@ public class TeleOpTest extends LinearOpMode {
         double newTarget = 0;
         double counts;
 
-        double WHEEL_DIAMETER_INCHES = 4.0;
-        double COUNTS_PER_MOTOR_REV = 1680;
-        double GEAR_REDUCTION = 1.5; //should be 1.5
+//        double WHEEL_DIAMETER_INCHES = 4.0;
+//        double COUNTS_PER_MOTOR_REV = 1680;
+//        double GEAR_REDUCTION = 1.5; //needs to be changed
 
         if (!gamepadRateLimit.hasExpired()) {
             return;
